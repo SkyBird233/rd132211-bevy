@@ -30,17 +30,17 @@ jobs:
       - name: Install wasm-bindgen-cli
         run: cargo install wasm-bindgen-cli
       
-      - name: Install wasm-opt
-        run: sudo apt-get update && sudo apt-get install -y binaryen
+      # Temporary remove wasm-opt as there's issues with the version in GHA
+      #- name: Install wasm-opt
+      # run: sudo apt-get update && sudo apt-get install -y binaryen
+      #- name: Optimize WASM
+      # run: wasm-opt -O4 -o ./out/rd132211-bevy_bg.wasm ./out/rd132211-bevy_bg.wasm
       
       - name: Build WASM
         run: cargo build --release --target wasm32-unknown-unknown
       
       - name: Generate bindings
         run: wasm-bindgen --out-name "rd132211-bevy" --out-dir ./out/ --target web --no-typescript ./target/wasm32-unknown-unknown/release/rd132211-bevy.wasm
-      
-      - name: Optimize WASM
-        run: wasm-opt -O4 -o ./out/rd132211-bevy_bg.wasm ./out/rd132211-bevy_bg.wasm
       
       - name: Copy assets
         run: |
