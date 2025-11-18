@@ -145,7 +145,6 @@ pub fn setup_world(
             }
         }
     }
-    block_manager.set_block(&mut commands, ivec3(1, 2, 3), BlockType::Block);
 }
 
 pub fn update_highlight_block(
