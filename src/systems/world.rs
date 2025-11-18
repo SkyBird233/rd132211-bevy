@@ -1,3 +1,5 @@
+use bevy::platform::collections::HashMap;
+
 use crate::prelude::*;
 
 #[derive(Component)]
@@ -37,33 +39,83 @@ impl Default for BlockBundle {
     }
 }
 
+#[derive(Resource, Default, Debug)]
+pub struct BlockManager {
+    blocks: HashMap<IVec3, Entity>,
+    target: Option<BlockTarget>,
+    mesh: Handle<Mesh>,
+    material: Handle<BlockMaterial>,
+}
+
+pub enum BlockType {
+    Air,
+    Block,
+}
+
+#[derive(Resource, Default, Debug)]
+pub struct BlockTarget {
+    pub position: IVec3,
+    pub normal: IVec3,
+}
+
+impl BlockManager {
+    pub fn set_block(&mut self, commands: &mut Commands, position: IVec3, block_type: BlockType) {
+        match block_type {
+            BlockType::Air => {
+                self.remove_block(commands, position);
+            }
+            BlockType::Block => {
+                self.spawn_block(commands, position);
+            }
+        }
+    }
+
+    pub fn set_target(&mut self, position: IVec3, normal: IVec3) {
+        self.target = Some(BlockTarget { position, normal });
+    }
+
+    fn spawn_block(&mut self, commands: &mut Commands, position: IVec3) {
+        let entity = commands
+            .spawn(BlockBundle {
+                mesh: Mesh3d(self.mesh.clone()),
+                material: MeshMaterial3d(self.material.clone()),
+                transform: Transform::from_translation(position.as_vec3()),
+                ..default()
+            })
+            .id();
+        self.blocks.insert(position, entity);
+    }
+
+    fn remove_block(&mut self, commands: &mut Commands, position: IVec3) {
+        let entity = self.blocks.get(&position);
+        match entity {
+            Some(entity) => {
+                commands.entity(*entity).despawn();
+                self.blocks.remove(&position);
+            }
+            None => {
+                error!("Failed to remove block {}", position);
+            }
+        }
+    }
+}
+
 pub fn setup_world(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<BlockMaterial>>,
     asset_server: Res<AssetServer>,
+    mut block_manager: ResMut<BlockManager>,
 ) {
-    let cube_mesh = meshes.add(Cuboid::new(1.0, 1.0, 1.0));
+    block_manager.mesh = meshes.add(Cuboid::new(1.0, 1.0, 1.0));
     let terrain_texture = asset_server.load("textures/terrain.png");
-    let block_material = materials.add(BlockMaterial {
-        terrain_texture,
-    });
+    block_manager.material = materials.add(BlockMaterial { terrain_texture });
+    block_manager.target = None;
 
     for x in -5..=5 {
         for z in -5..=5 {
-            commands.spawn(BlockBundle {
-                mesh: Mesh3d(cube_mesh.clone()),
-                material: MeshMaterial3d(block_material.clone()),
-                transform: Transform::from_xyz(x as f32, 0.0, z as f32),
-                ..default()
-            });
+            block_manager.set_block(&mut commands, ivec3(x, 0, z), BlockType::Block);
         }
     }
-
-    commands.spawn(BlockBundle {
-        mesh: Mesh3d(cube_mesh.clone()),
-        material: MeshMaterial3d(block_material.clone()),
-        transform: Transform::from_xyz(1.0, 2.0, 3.0),
-        ..default()
-    });
+    block_manager.set_block(&mut commands, ivec3(1, 2, 3), BlockType::Block);
 }

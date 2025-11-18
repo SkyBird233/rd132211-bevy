@@ -1,4 +1,7 @@
-use crate::prelude::*;
+use crate::{
+    prelude::*,
+    systems::world::{BlockManager, BlockType},
+};
 use bevy::input::mouse::AccumulatedMouseMotion;
 
 #[derive(Component, Debug)]
@@ -127,6 +130,8 @@ pub fn handle_player_interaction(
     camera_transform: Single<&GlobalTransform, With<PlayerCamera>>,
     transforms: Query<&GlobalTransform>,
     mouse: Res<ButtonInput<MouseButton>>,
+    mut block_manager: ResMut<BlockManager>,
+    mut commands: Commands,
 ) {
     let rapier_context = rapier_context.single().unwrap();
     let player_entity = player_entity.into_inner();
@@ -142,12 +147,18 @@ pub fn handle_player_interaction(
         filter,
     ) {
         if let Ok(entity_transform) = transforms.get(entity) {
-            dbg!(entity_transform.translation(), ray_intersection.normal);
+            let position = entity_transform.translation().as_ivec3();
+            let normal = ray_intersection.normal.as_ivec3();
+            block_manager.set_target(position, normal);
             // TODO: highlight target surface
 
             // Place or remove blocks
-            if mouse.pressed(MouseButton::Left){}
-            if mouse.pressed(MouseButton::Right){}
+            if mouse.just_pressed(MouseButton::Left) {
+                block_manager.set_block(&mut commands, position + normal, BlockType::Block);
+            }
+            if mouse.just_pressed(MouseButton::Right) {
+                block_manager.set_block(&mut commands, position, BlockType::Air);
+            }
         }
     }
 }
