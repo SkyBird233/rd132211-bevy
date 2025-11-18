@@ -12,7 +12,7 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(DefaultPlugins)
+        app.add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
             .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
             .add_plugins(RapierDebugRenderPlugin::default())
             .add_plugins((WorldPlugin, PlayerPlugin, FocusPlugin));

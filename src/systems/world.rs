@@ -4,7 +4,11 @@ use crate::prelude::*;
 pub struct Block;
 
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
-pub struct BlockMaterial {}
+pub struct BlockMaterial {
+    #[texture(0)]
+    #[sampler(1)]
+    pub terrain_texture: Handle<Image>,
+}
 
 impl Material for BlockMaterial {
     fn fragment_shader() -> ShaderRef {
@@ -37,9 +41,13 @@ pub fn setup_world(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<BlockMaterial>>,
+    asset_server: Res<AssetServer>,
 ) {
     let cube_mesh = meshes.add(Cuboid::new(1.0, 1.0, 1.0));
-    let block_material = materials.add(BlockMaterial {});
+    let terrain_texture = asset_server.load("textures/terrain.png");
+    let block_material = materials.add(BlockMaterial {
+        terrain_texture,
+    });
 
     for x in -5..=5 {
         for z in -5..=5 {
