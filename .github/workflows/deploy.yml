@@ -1,0 +1,64 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+    
+      - uses: Swatinem/rust-cache@v2
+      
+      - name: Install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli
+      
+      - name: Install wasm-opt
+        run: sudo apt-get update && sudo apt-get install -y binaryen
+      
+      - name: Build WASM
+        run: cargo build --release --target wasm32-unknown-unknown
+      
+      - name: Generate bindings
+        run: wasm-bindgen --out-name "rd132211-bevy" --out-dir ./out/ --target web --no-typescript ./target/wasm32-unknown-unknown/release/rd132211-bevy.wasm
+      
+      - name: Optimize WASM
+        run: wasm-opt -O4 -o ./out/rd132211-bevy_bg.wasm ./out/rd132211-bevy_bg.wasm
+      
+      - name: Copy assets
+        run: |
+          cp index.html out/
+          cp -r assets out/
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ./out
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
