@@ -1,6 +1,6 @@
 #import bevy_pbr::{
     forward_io::VertexOutput,
-    mesh_view_bindings::view,
+    mesh_view_bindings::{view, globals},
     mesh_functions,
 }
 
@@ -8,6 +8,11 @@
 var terrain_texture: texture_2d<f32>;
 @group(2) @binding(1)
 var terrain_sampler: sampler;
+// Highlight uniforms injected via material (BlockMaterial)
+@group(2) @binding(2)
+var<uniform> highlight_pos: vec3<f32>; // xyz position, w radius
+@group(2) @binding(3)
+var<uniform> highlight_normal: vec3<f32>; // xyz normal, w enabled flag
 
 @fragment
 fn fragment(
@@ -20,6 +25,7 @@ fn fragment(
         model_matrix[3][1],
         model_matrix[3][2]
     );
+    let object_normal = mesh_data.world_normal;
     
     // Determine block type based on center position
     var tile_index = 0u;
@@ -37,6 +43,17 @@ fn fragment(
     // ((x,y) + face_uv) / tiles_per_row
     let atlas_uv = (vec2<f32>(f32(tile_x), f32(tile_y)) + face_uv) / f32(tiles_per_row);
     
-    let color = textureSample(terrain_texture, terrain_sampler, atlas_uv);
+    var color = textureSample(terrain_texture, terrain_sampler, atlas_uv);
+
+    let epsilon = 0.01;
+    let pos_match = distance(highlight_pos, object_center) < epsilon;
+    let normal_match = distance(highlight_normal, object_normal) < epsilon;
+    let highlight_enabled = any(highlight_normal != vec3<f32>(0.0, 0.0, 0.0));
+    
+    if highlight_enabled && pos_match && normal_match {
+        let pulse = 0.1+0.1 * sin(3.1415926 *3 * globals.time);
+        color = vec4<f32>(color.rgb + pulse, color.a);
+    }
+
     return color;
 }

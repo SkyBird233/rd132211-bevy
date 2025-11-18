@@ -160,5 +160,7 @@ pub fn handle_player_interaction(
                 block_manager.set_block(&mut commands, position, BlockType::Air);
             }
         }
+    } else {
+        block_manager.set_target(IVec3::ZERO, IVec3::ZERO);
     }
 }

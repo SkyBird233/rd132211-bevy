@@ -1,4 +1,4 @@
-use bevy::platform::collections::HashMap;
+use bevy::{math::VectorSpace, platform::collections::HashMap};
 
 use crate::prelude::*;
 
@@ -10,6 +10,20 @@ pub struct BlockMaterial {
     #[texture(0)]
     #[sampler(1)]
     pub terrain_texture: Handle<Image>,
+    #[uniform(2)]
+    pub highlight_pos: Vec3,
+    #[uniform(3)]
+    pub highlight_normal: Vec3,
+}
+
+impl Default for BlockMaterial {
+    fn default() -> Self {
+        Self {
+            terrain_texture: Handle::default(),
+            highlight_pos: Vec3::ZERO,
+            highlight_normal: Vec3::ZERO,
+        }
+    }
 }
 
 impl Material for BlockMaterial {
@@ -109,7 +123,11 @@ pub fn setup_world(
 ) {
     block_manager.mesh = meshes.add(Cuboid::new(1.0, 1.0, 1.0));
     let terrain_texture = asset_server.load("textures/terrain.png");
-    block_manager.material = materials.add(BlockMaterial { terrain_texture });
+    block_manager.material = materials.add(BlockMaterial {
+        terrain_texture,
+        highlight_pos: Vec3::ZERO,
+        highlight_normal: Vec3::ZERO,
+    });
     block_manager.target = None;
 
     for x in -5..=5 {
@@ -118,4 +136,19 @@ pub fn setup_world(
         }
     }
     block_manager.set_block(&mut commands, ivec3(1, 2, 3), BlockType::Block);
+}
+
+pub fn update_highlight_block(
+    block_manager: Res<BlockManager>,
+    mut materials: ResMut<Assets<BlockMaterial>>,
+) {
+    let Some(material) = materials.get_mut(&block_manager.material) else {
+        return;
+    };
+    let Some(target) = &block_manager.target else {
+        return;
+    };
+
+    material.highlight_pos = target.position.as_vec3();
+    material.highlight_normal = target.normal.as_vec3();
 }
