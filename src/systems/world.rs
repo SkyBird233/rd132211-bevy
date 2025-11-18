@@ -18,5 +18,5 @@ pub fn setup_world(mut commands: Commands) {
     }
     commands
         .spawn(Collider::cuboid(0.5, 0.5, 0.5))
-        .insert(Transform::from_xyz(1.0, 1.0, 2.0));
+        .insert(Transform::from_xyz(1.0, 2.0, 3.0));
 }

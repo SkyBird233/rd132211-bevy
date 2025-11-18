@@ -3,6 +3,9 @@ use crate::prelude::*;
 #[derive(Component, Debug)]
 pub struct Player;
 
+#[derive(Component, Debug)]
+pub struct PlayerCamera;
+
 #[derive(Component, Debug, Default)]
 pub struct PlayerPhysics {
     vertical_velocity: f32,
@@ -43,18 +46,29 @@ impl Default for PlayerBundle {
 }
 
 pub fn spawn(mut commands: Commands) {
-    commands.spawn(PlayerBundle::default());
+    let player_id = commands.spawn(PlayerBundle::default()).id();
+    
+    // Spawn camera as child of player
+    commands.spawn((
+        PlayerCamera,
+        Camera3d::default(),
+        Transform::from_xyz(0.0, 0.5, 0.0),
+        ChildOf(player_id),
+    ));
 }
 
 pub fn handle_player_movement(
     mut players: Query<(&mut KinematicCharacterController, &mut PlayerPhysics), With<Player>>,
+    camera_transform: Query<&Transform, With<PlayerCamera>>,
     outputs: Query<&KinematicCharacterControllerOutput, With<Player>>,
     keys: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
 ) {
     let dt = time.delta_secs();
+
     // Should be only 1 player now
     let (mut controller, mut physics) = players.single_mut().unwrap();
+    let camera_transform = camera_transform.single().unwrap();
 
     let mut direction = Vec3::ZERO;
     if keys.pressed(KeyCode::KeyW) {
@@ -64,11 +78,18 @@ pub fn handle_player_movement(
         direction.x -= 1.0;
     }
     if keys.pressed(KeyCode::KeyA) {
-        direction.z += 1.0;
-    }
-    if keys.pressed(KeyCode::KeyD) {
         direction.z -= 1.0;
     }
+    if keys.pressed(KeyCode::KeyD) {
+        direction.z += 1.0;
+    }
+
+    let forward = camera_transform.forward();
+    let forward_flat = Vec3::new(forward.x, 0.0, forward.z).normalize();
+    let right = camera_transform.right();
+    let right_flat = Vec3::new(right.x, 0.0, right.z).normalize();
+
+    direction = forward_flat * direction.x + right_flat * direction.z;
 
     // The output is only added when `KinematicCharacterController::translation` set to a value other than `None`.
     if let Ok(output) = outputs.single() {
