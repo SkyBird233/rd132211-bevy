@@ -29,7 +29,7 @@ impl Plugin for GamePlugin {
             1.0,
         )))
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugins(RapierDebugRenderPlugin::default())
+        .add_plugins(RapierDebugRenderPlugin::default().disabled())
         .add_plugins((WorldPlugin, PlayerPlugin, FocusPlugin));
     }
 }
