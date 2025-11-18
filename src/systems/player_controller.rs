@@ -70,27 +70,16 @@ pub fn handle_player_movement(
     let (mut controller, mut physics) = players.single_mut().unwrap();
     let camera_transform = camera_transform.single().unwrap();
 
-    let mut direction = Vec3::ZERO;
-    if keys.pressed(KeyCode::KeyW) {
-        direction.x += 1.0;
-    }
-    if keys.pressed(KeyCode::KeyS) {
-        direction.x -= 1.0;
-    }
-    if keys.pressed(KeyCode::KeyA) {
-        direction.z -= 1.0;
-    }
-    if keys.pressed(KeyCode::KeyD) {
-        direction.z += 1.0;
-    }
+    // WASD
+    let forward_input = keys.pressed(KeyCode::KeyW) as i32 - keys.pressed(KeyCode::KeyS) as i32;
+    let right_input = keys.pressed(KeyCode::KeyD) as i32 - keys.pressed(KeyCode::KeyA) as i32;
 
-    let forward = camera_transform.forward();
-    let forward_flat = Vec3::new(forward.x, 0.0, forward.z).normalize();
-    let right = camera_transform.right();
-    let right_flat = Vec3::new(right.x, 0.0, right.z).normalize();
+    let forward_flat = camera_transform.forward().with_y(0.0).normalize();
+    let right_flat = camera_transform.right().with_y(0.0).normalize();
+    
+    let direction = forward_flat * forward_input as f32 + right_flat * right_input as f32;
 
-    direction = forward_flat * direction.x + right_flat * direction.z;
-
+    // Jump and gravity
     // The output is only added when `KinematicCharacterController::translation` set to a value other than `None`.
     if let Ok(output) = outputs.single() {
         if output.grounded && physics.vertical_velocity < 0.0 {
