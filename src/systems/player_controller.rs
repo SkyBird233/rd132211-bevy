@@ -3,6 +3,15 @@ use crate::prelude::*;
 #[derive(Component, Debug)]
 pub struct Player;
 
+#[derive(Component, Debug, Default)]
+pub struct PlayerPhysics {
+    vertical_velocity: f32,
+}
+
+const MOVE_SPEED: f32 = 10.0;
+const GRAVITY: f32 = -30.0;
+const JUMP_SPEED: f32 = 12.0;
+
 #[derive(Bundle, Debug)]
 struct PlayerBundle {
     marker: Player,
@@ -10,6 +19,7 @@ struct PlayerBundle {
     collider: Collider,
     transform: Transform,
     kinematic_character_controller: KinematicCharacterController,
+    physics: PlayerPhysics,
 }
 
 impl Default for PlayerBundle {
@@ -27,6 +37,7 @@ impl Default for PlayerBundle {
                 }),
                 ..default()
             },
+            physics: default(),
         }
     }
 }
@@ -35,13 +46,15 @@ pub fn spawn(mut commands: Commands) {
     commands.spawn(PlayerBundle::default());
 }
 
-pub fn gogogo(
-    mut player_controllers: Query<&mut KinematicCharacterController, With<Player>>,
+pub fn handle_player_movement(
+    mut players: Query<(&mut KinematicCharacterController, &mut PlayerPhysics), With<Player>>,
+    outputs: Query<&KinematicCharacterControllerOutput, With<Player>>,
     keys: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
 ) {
+    let dt = time.delta_secs();
     // Should be only 1 player now
-    let mut controller = player_controllers.single_mut().unwrap();
+    let (mut controller, mut physics) = players.single_mut().unwrap();
 
     let mut direction = Vec3::ZERO;
     if keys.pressed(KeyCode::KeyW) {
@@ -57,14 +70,18 @@ pub fn gogogo(
         direction.z -= 1.0;
     }
 
-    controller.translation = Some(direction * 10.0 * time.delta_secs());
-}
-
-pub fn read_result_system(controllers: Query<(&Player, &KinematicCharacterControllerOutput)>) {
-    for (player, output) in controllers.iter() {
-        println!(
-            "Entity {:?} moved by {:?} and touches the ground: {:?}",
-            player, output.effective_translation, output.grounded
-        );
+    // The output is only added when `KinematicCharacterController::translation` set to a value other than `None`.
+    if let Ok(output) = outputs.single() {
+        if output.grounded && physics.vertical_velocity < 0.0 {
+            physics.vertical_velocity = 0.0;
+        }
+        if keys.just_pressed(KeyCode::Space) && output.grounded {
+            physics.vertical_velocity = JUMP_SPEED;
+        }
     }
+    physics.vertical_velocity += GRAVITY * dt;
+
+    let mut translation = direction * MOVE_SPEED * dt;
+    translation.y = physics.vertical_velocity * dt;
+    controller.translation = Some(translation);
 }
