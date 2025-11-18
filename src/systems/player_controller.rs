@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use bevy::input::mouse::AccumulatedMouseMotion;
 
 #[derive(Component, Debug)]
 pub struct Player;
@@ -14,6 +15,7 @@ pub struct PlayerPhysics {
 const MOVE_SPEED: f32 = 10.0;
 const GRAVITY: f32 = -30.0;
 const JUMP_SPEED: f32 = 12.0;
+const MOUSE_SENSITIVITY: Vec2 = Vec2::new(0.003, 0.002);
 
 #[derive(Bundle, Debug)]
 struct PlayerBundle {
@@ -47,7 +49,7 @@ impl Default for PlayerBundle {
 
 pub fn spawn(mut commands: Commands) {
     let player_id = commands.spawn(PlayerBundle::default()).id();
-    
+
     // Spawn camera as child of player
     commands.spawn((
         PlayerCamera,
@@ -76,7 +78,7 @@ pub fn handle_player_movement(
 
     let forward_flat = camera_transform.forward().with_y(0.0).normalize();
     let right_flat = camera_transform.right().with_y(0.0).normalize();
-    
+
     let direction = forward_flat * forward_input as f32 + right_flat * right_input as f32;
 
     // Jump and gravity
@@ -94,4 +96,27 @@ pub fn handle_player_movement(
     let mut translation = direction * MOVE_SPEED * dt;
     translation.y = physics.vertical_velocity * dt;
     controller.translation = Some(translation);
+}
+
+pub fn handle_player_camera(
+    accumulated_mouse_motion: Res<AccumulatedMouseMotion>,
+    player_camera_transform: Single<&mut Transform, With<PlayerCamera>>,
+) {
+    let delta = accumulated_mouse_motion.delta;
+    if delta == Vec2::ZERO {
+        return;
+    }
+
+    let mut transform = player_camera_transform.into_inner();
+
+    let delta_yaw = -delta.x * MOUSE_SENSITIVITY.x;
+    let delta_pitch = -delta.y * MOUSE_SENSITIVITY.y;
+
+    let (yaw, pitch, roll) = transform.rotation.to_euler(EulerRot::YXZ);
+    let yaw = yaw + delta_yaw;
+
+    const PITCH_LIMIT: f32 = std::f32::consts::FRAC_PI_2 - 0.01;
+    let pitch = (pitch + delta_pitch).clamp(-PITCH_LIMIT, PITCH_LIMIT);
+
+    transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
 }

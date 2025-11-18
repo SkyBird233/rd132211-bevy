@@ -8,5 +8,6 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, player_controller::spawn);
         app.add_systems(Update,player_controller::handle_player_movement);
+        app.add_systems(Update,player_controller::handle_player_camera);
     }
 }
