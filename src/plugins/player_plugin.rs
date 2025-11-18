@@ -13,6 +13,7 @@ impl Plugin for PlayerPlugin {
             (
                 player_controller::handle_player_movement,
                 player_controller::handle_player_camera,
+                player_controller::handle_player_interaction
             )
                 .run_if(|focus_status: Res<FocusStatus>| focus_status.0),
         );

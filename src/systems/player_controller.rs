@@ -120,3 +120,34 @@ pub fn handle_player_camera(
 
     transform.rotation = Quat::from_euler(EulerRot::YXZ, yaw, pitch, roll);
 }
+
+pub fn handle_player_interaction(
+    rapier_context: ReadRapierContext,
+    player_entity: Single<Entity, With<Player>>,
+    camera_transform: Single<&GlobalTransform, With<PlayerCamera>>,
+    transforms: Query<&GlobalTransform>,
+    mouse: Res<ButtonInput<MouseButton>>,
+) {
+    let rapier_context = rapier_context.single().unwrap();
+    let player_entity = player_entity.into_inner();
+    let camera_transform = camera_transform.into_inner();
+
+    let filter = QueryFilter::exclude_dynamic().exclude_collider(player_entity);
+
+    if let Some((entity, ray_intersection)) = rapier_context.cast_ray_and_get_normal(
+        camera_transform.translation(),
+        camera_transform.forward().into(),
+        4.0,
+        false,
+        filter,
+    ) {
+        if let Ok(entity_transform) = transforms.get(entity) {
+            dbg!(entity_transform.translation(), ray_intersection.normal);
+            // TODO: highlight target surface
+
+            // Place or remove blocks
+            if mouse.pressed(MouseButton::Left){}
+            if mouse.pressed(MouseButton::Right){}
+        }
+    }
+}
