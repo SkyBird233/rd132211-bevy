@@ -57,7 +57,7 @@ pub fn spawn(mut commands: Commands) {
     commands.spawn((
         PlayerCamera,
         Camera3d::default(),
-        Transform::from_xyz(0.0, 0.5, 0.0),
+        Transform::from_xyz(0.0, 0.8, 0.0),
         Projection::from(PerspectiveProjection {
             fov: 60.0_f32.to_radians(),
             ..default()
