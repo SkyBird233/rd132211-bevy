@@ -5,23 +5,29 @@ use crate::prelude::*;
 #[derive(Component)]
 pub struct Block;
 
+#[derive(ShaderType, Debug, Clone)]
+pub struct HighlightData {
+    pub pos: Vec4,
+    pub normal: Vec4,
+}
+
 #[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct BlockMaterial {
     #[texture(0)]
     #[sampler(1)]
     pub terrain_texture: Handle<Image>,
     #[uniform(2)]
-    pub highlight_pos: Vec3,
-    #[uniform(3)]
-    pub highlight_normal: Vec3,
+    pub highlight: HighlightData,
 }
 
 impl Default for BlockMaterial {
     fn default() -> Self {
         Self {
             terrain_texture: Handle::default(),
-            highlight_pos: Vec3::ZERO,
-            highlight_normal: Vec3::ZERO,
+            highlight: HighlightData {
+                pos: Vec4::ZERO,
+                normal: Vec4::ZERO,
+            },
         }
     }
 }
@@ -125,8 +131,10 @@ pub fn setup_world(
     let terrain_texture = asset_server.load("textures/terrain.png");
     block_manager.material = materials.add(BlockMaterial {
         terrain_texture,
-        highlight_pos: Vec3::ZERO,
-        highlight_normal: Vec3::ZERO,
+        highlight: HighlightData {
+            pos: Vec4::ZERO,
+            normal: Vec4::ZERO,
+        },
     });
     block_manager.target = None;
 
@@ -151,6 +159,6 @@ pub fn update_highlight_block(
         return;
     };
 
-    material.highlight_pos = target.position.as_vec3();
-    material.highlight_normal = target.normal.as_vec3();
+    material.highlight.pos = target.position.as_vec3().extend(0.0);
+    material.highlight.normal = target.normal.as_vec3().extend(0.0);
 }

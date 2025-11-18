@@ -9,10 +9,12 @@ var terrain_texture: texture_2d<f32>;
 @group(2) @binding(1)
 var terrain_sampler: sampler;
 // Highlight uniforms injected via material (BlockMaterial)
+struct HighlightData {
+    pos: vec4<f32>,      // xyz position, w unused (padding)
+    normal: vec4<f32>,   // xyz normal, w unused (padding)
+}
 @group(2) @binding(2)
-var<uniform> highlight_pos: vec3<f32>; // xyz position, w radius
-@group(2) @binding(3)
-var<uniform> highlight_normal: vec3<f32>; // xyz normal, w enabled flag
+var<uniform> highlight: HighlightData;
 
 @fragment
 fn fragment(
@@ -46,9 +48,9 @@ fn fragment(
     var color = textureSample(terrain_texture, terrain_sampler, atlas_uv);
 
     let epsilon = 0.01;
-    let pos_match = distance(highlight_pos, object_center) < epsilon;
-    let normal_match = distance(highlight_normal, object_normal) < epsilon;
-    let highlight_enabled = any(highlight_normal != vec3<f32>(0.0, 0.0, 0.0));
+    let pos_match = distance(highlight.pos.xyz, object_center) < epsilon;
+    let normal_match = distance(highlight.normal.xyz, object_normal) < epsilon;
+    let highlight_enabled = any(highlight.normal.xyz != vec3<f32>(0.0, 0.0, 0.0));
     
     if highlight_enabled && pos_match && normal_match {
         let pulse = 0.1+0.1 * sin(3.1415926 *3 * globals.time);
