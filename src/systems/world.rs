@@ -130,9 +130,11 @@ pub fn setup_world(
     });
     block_manager.target = None;
 
-    for x in -5..=5 {
-        for z in -5..=5 {
-            block_manager.set_block(&mut commands, ivec3(x, 0, z), BlockType::Block);
+    for x in -10..=10 {
+        for z in -10..=10 {
+            for y in -5..=0 {
+                block_manager.set_block(&mut commands, ivec3(x, y, z), BlockType::Block);
+            }
         }
     }
     block_manager.set_block(&mut commands, ivec3(1, 2, 3), BlockType::Block);
