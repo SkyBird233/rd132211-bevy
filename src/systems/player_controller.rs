@@ -15,9 +15,9 @@ pub struct PlayerPhysics {
     vertical_velocity: f32,
 }
 
-const MOVE_SPEED: f32 = 10.0;
+const MOVE_SPEED: f32 = 8.0;
 const GRAVITY: f32 = -30.0;
-const JUMP_SPEED: f32 = 12.0;
+const JUMP_SPEED: f32 = 10.0;
 const MOUSE_SENSITIVITY: Vec2 = Vec2::new(0.003, 0.002);
 
 #[derive(Bundle, Debug)]
@@ -58,6 +58,10 @@ pub fn spawn(mut commands: Commands) {
         PlayerCamera,
         Camera3d::default(),
         Transform::from_xyz(0.0, 0.5, 0.0),
+        Projection::from(PerspectiveProjection {
+            fov: 60.0_f32.to_radians(),
+            ..default()
+        }),
         ChildOf(player_id),
     ));
 }
