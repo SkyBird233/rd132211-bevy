@@ -1,4 +1,4 @@
-use bevy::{math::VectorSpace, platform::collections::HashMap};
+use bevy::{platform::collections::HashMap};
 
 use crate::prelude::*;
 
