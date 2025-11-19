@@ -53,7 +53,7 @@ fn fragment(
     let highlight_enabled = any(highlight.normal.xyz != vec3<f32>(0.0, 0.0, 0.0));
     
     if highlight_enabled && pos_match && normal_match {
-        let pulse = 0.1+0.1 * sin(3.1415926 *3 * globals.time);
+        let pulse = 0.1 + 0.1 * sin(3.1415926 * 3 * globals.time);
         color = vec4<f32>(color.rgb + pulse, color.a);
     }
 
