@@ -67,8 +67,8 @@ pub fn spawn(mut commands: Commands) {
 }
 
 pub fn handle_player_movement(
-    mut players: Query<(&mut KinematicCharacterController, &mut PlayerPhysics), With<Player>>,
-    camera_transform: Query<&Transform, With<PlayerCamera>>,
+    mut players: Query<(&mut KinematicCharacterController, &mut PlayerPhysics, &mut Transform), With<Player>>,
+    camera_transform: Query<&Transform, (With<PlayerCamera>, Without<Player>)>, // https://bevy.org/learn/errors/b0001
     outputs: Query<&KinematicCharacterControllerOutput, With<Player>>,
     keys: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
@@ -76,8 +76,13 @@ pub fn handle_player_movement(
     let dt = time.delta_secs();
 
     // Should be only 1 player now
-    let (mut controller, mut physics) = players.single_mut().unwrap();
+    let (mut controller, mut physics, mut transform) = players.single_mut().unwrap();
     let camera_transform = camera_transform.single().unwrap();
+
+    if keys.pressed(KeyCode::KeyR) {
+        transform.translation = Vec3 { x: 0.0, y: 10.0, z: 0.0 };
+        return;
+    }
 
     // WASD
     let forward_input = keys.pressed(KeyCode::KeyW) as i32 - keys.pressed(KeyCode::KeyS) as i32;

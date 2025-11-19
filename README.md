@@ -16,5 +16,4 @@ cargo build --release
 Tested on Linux x86_64 with X11 and the web platform.
 
 ## Todo
-- [ ] `R` to respawn
 - [ ] Save & load
