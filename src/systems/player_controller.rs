@@ -159,7 +159,6 @@ pub fn handle_player_interaction(
             let position = entity_transform.translation().as_ivec3();
             let normal = ray_intersection.normal.as_ivec3();
             block_manager.set_target(position, normal);
-            // TODO: highlight target surface
 
             // Place or remove blocks
             if mouse.just_pressed(MouseButton::Left) {
